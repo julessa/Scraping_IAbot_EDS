@@ -1,0 +1,35 @@
+activation de l'env : source .venv/bin/activate
+
+Sortie de l'env : deactivate
+
+
+
+✅ Explication du Backend :
+
+FastAPI sert une API sur /chat pour répondre aux questions.
+
+LangChain et OpenAI traitent les requêtes et génèrent des réponses.
+
+FAISS est utilisé pour stocker et rechercher efficacement les données historiques.
+
+Pydantic structure les requêtes pour éviter les erreurs.
+
+
+
+✅ Explication du Frontend :
+Un champ de saisie pour entrer une question.
+Un bouton "Envoyer" qui interroge le backend FastAPI.
+Affichage dynamique de la réponse du chatbot
+
+
+Lancer API :
+
+cd /Users/romainsalavas/Desktop/Scraping_IAbot_EDS/
+uvicorn chatbot_backend:app --reload
+
+Lancer front :
+
+pour la 1e fois :
+npm install 
+
+Lancement : npm run
