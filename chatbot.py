@@ -9,6 +9,7 @@ import json
 import os
 import requests
 from streamlit_lottie import st_lottie
+import streamlit.components.v1 as components
 
 # Configuration du thème de Streamlit
 st.set_page_config(page_title="Chatbot Historique ⚔️", page_icon="⚔️", layout="centered")
@@ -41,12 +42,6 @@ st.markdown(
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         text-align: center;
     }
-    /* ✅ Centrage de l'animation Lottie */
-    .lottie-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
     </style>
     """,
     unsafe_allow_html=True
@@ -62,7 +57,7 @@ def load_lottieurl(url):
 with open("soldiers_animation.json", "r") as f:
     lottie_soldiers = json.load(f)
 
-# 🎨 Interface Streamlit avec animation bien centrée sous le titre
+# Titre centré
 st.markdown(
     """
     <div style="text-align: center;">
@@ -72,8 +67,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Afficher l'animation centrée sous le titre
-st_lottie(lottie_soldiers, speed=1, width=400, height=300, key="soldiers")
+# Centrer l'animation avec des colonnes
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    st_lottie(lottie_soldiers, speed=1, width=400, height=300, key="soldiers")
 
 # Vérification et définition de la clé API OpenAI
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -120,6 +117,24 @@ def chat_with_bot(query):
 
 # Zone de saisie utilisateur
 query = st.text_input("Posez votre question sur l'histoire de France :")
+
+# Utilisation de components.html pour injecter un script JS qui recherche l'input
+components.html(
+    """
+    <script>
+      // On utilise setInterval pour s'assurer que l'élément est bien présent dans le DOM
+      const timer = setInterval(() => {
+          // Utilisation d'un sélecteur basé sur le placeholder pour être plus précis
+          const input = document.querySelector("input[placeholder='Posez votre question sur l\\'histoire de France :']");
+          if (input) {
+              input.focus();
+              clearInterval(timer);
+          }
+      }, 100);
+    </script>
+    """,
+    height=0,
+)
 
 if st.button("Envoyer"):
     if query:
