@@ -159,3 +159,4 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 Old/scrap_eds_groupe5_iabot.zip
+.DS_Store

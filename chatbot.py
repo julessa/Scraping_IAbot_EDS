@@ -2,31 +2,14 @@ import streamlit as st
 import openai
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
 from langchain.schema import Document
 from langchain.chains import RetrievalQA
+from langchain.vectorstores import Chroma
 import json
 import os
 import requests
 from streamlit_lottie import st_lottie
-import sqlite3
 
-# Connexion à la base SQLite
-conn = sqlite3.connect("vector_db.sqlite")
-cur = conn.cursor()
-conn.enable_load_extension(True)  # Active le chargement des extensions
-
-# Charger l'extension VSS pour SQLite
-cur.execute("SELECT load_extension('vss0')")
-
-# Création de la table vectorielle (1536 dimensions pour OpenAI)
-cur.execute("""
-    CREATE VIRTUAL TABLE IF NOT EXISTS documents
-    USING vss(embedding(1536))
-""")
-
-conn.commit()
-print("✅ SQLite-VSS configuré avec succès !")
 # Configuration du thème de Streamlit
 st.set_page_config(page_title="Chatbot Historique ⚔️", page_icon="⚔️", layout="centered")
 
@@ -113,19 +96,22 @@ for entry in data:
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
 split_docs = text_splitter.split_documents(docs)
 
-# 4️⃣ Vérifier si l'index FAISS existe déjà
-index_path = "faiss_index"
-if os.path.exists(index_path):
-    vector_store = FAISS.load_local(index_path, OpenAIEmbeddings(), allow_dangerous_deserialization=True)
+# 4️⃣ Initialiser le vector store avec Chroma
+persist_directory = "chroma_db"
+embedding = OpenAIEmbeddings(openai_api_key=openai_api_key)
+
+# Si le dossier existe et n'est pas vide, on charge l'index existant, sinon on crée un nouvel index
+if os.path.exists(persist_directory) and os.listdir(persist_directory):
+    vector_store = Chroma(persist_directory=persist_directory, embedding_function=embedding)
 else:
-    vector_store = FAISS.from_documents(split_docs, OpenAIEmbeddings())
-    vector_store.save_local(index_path)
+    vector_store = Chroma.from_documents(split_docs, embedding, persist_directory=persist_directory)
+    vector_store.persist()  # Sauvegarde de l'index
 
 # 5️⃣ Créer un retriever pour interroger les données historiques
 retriever = vector_store.as_retriever()
 
 # 6️⃣ Configurer le modèle OpenAI via LangChain
-llm = ChatOpenAI(model="gpt-3.5-turbo")
+llm = ChatOpenAI(model="gpt-3.5-turbo", openai_api_key=openai_api_key)
 
 # 7️⃣ Construire la chaîne de questions-réponses
 qa_chain = RetrievalQA.from_chain_type(llm, retriever=retriever)
