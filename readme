@@ -15,7 +15,9 @@ cd <NOM_DU_REPO>
 python -m venv .venv
 source .venv/bin/activate  # Sur macOS/Linux
 # ou
-.venv\Scripts\activate  # Sur Windows
+venv\Scripts\activate  # Sur Windows
+
+Set-ExecutionPolicy Unrestricted -Scope Process # SI erreur windows
 ```
 
 ### 3. Installer les dépendances

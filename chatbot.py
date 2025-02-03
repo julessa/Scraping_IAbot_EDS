@@ -9,7 +9,24 @@ import json
 import os
 import requests
 from streamlit_lottie import st_lottie
+import sqlite3
 
+# Connexion à la base SQLite
+conn = sqlite3.connect("vector_db.sqlite")
+cur = conn.cursor()
+conn.enable_load_extension(True)  # Active le chargement des extensions
+
+# Charger l'extension VSS pour SQLite
+cur.execute("SELECT load_extension('vss0')")
+
+# Création de la table vectorielle (1536 dimensions pour OpenAI)
+cur.execute("""
+    CREATE VIRTUAL TABLE IF NOT EXISTS documents
+    USING vss(embedding(1536))
+""")
+
+conn.commit()
+print("✅ SQLite-VSS configuré avec succès !")
 # Configuration du thème de Streamlit
 st.set_page_config(page_title="Chatbot Historique ⚔️", page_icon="⚔️", layout="centered")
 
