@@ -1,3 +1,7 @@
+import os
+# Désactivez le mode multi‑tenant dès le début
+os.environ["CHROMADB_DISABLE_MULTITENANT"] = "true"
+
 import streamlit as st
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -5,11 +9,16 @@ from langchain.schema import Document
 from langchain.chains import RetrievalQA
 from langchain.vectorstores import Chroma
 import json
-import os
 import requests
 from streamlit_lottie import st_lottie
 
-# Configuration du thème de Streamlit
+# Pour la visualisation
+import plotly.express as px
+from sklearn.decomposition import PCA
+import numpy as np
+import pandas as pd
+
+# Configuration de Streamlit
 st.set_page_config(page_title="Chatbot Historique ⚔️", page_icon="⚔️", layout="centered")
 
 # Charger les styles CSS personnalisés
@@ -74,13 +83,13 @@ st.markdown(
 
 st_lottie(lottie_soldiers, speed=1, width=400, height=300, key="soldiers")
 
-# Vérification et définition de la clé API OpenAI
+# Vérification de la clé API
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
-    st.error("🚨 Clé API OpenAI non trouvée. Assurez-vous de définir OPENAI_API_KEY dans vos variables d'environnement.")
+    st.error("🚨 Clé API OpenAI non trouvée.")
     st.stop()
 
-# 1️⃣ Charger les données du JSON
+# Charger les données JSON
 with open("combined_data.json", "r", encoding="utf-8") as f:
     data = json.load(f)
 
@@ -90,10 +99,13 @@ for entry in data:
     if "duplicate" in entry and not entry["duplicate"]:
         text = f"{entry['date']} : {entry['event']}"
         docs.append(Document(page_content=text))
+st.write(f"Nombre de documents après filtrage : {len(docs)}")
 
-# 3️⃣ Fractionner les textes pour l'indexation
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
 split_docs = text_splitter.split_documents(docs)
+st.write(f"Nombre de documents après découpage : {len(split_docs)}")
+if split_docs:
+    st.write("Exemple de document indexé :", split_docs[0].page_content)
 
 # 4️⃣ Initialiser Chroma
 persist_directory = "chroma_db"
@@ -144,12 +156,10 @@ def chat_with_bot(query):
 
     return response
 
-# Zone de saisie utilisateur
 query = st.text_input("Posez votre question sur l'histoire de France :")
-
 if st.button("Envoyer"):
     if query:
-        with st.spinner("Recherche en cours..."):
+        with st.spinner("Recherche..."):
             response = chat_with_bot(query)
             st.markdown("### Réponse :")
             st.write(response)
