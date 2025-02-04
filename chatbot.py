@@ -21,7 +21,7 @@ os.environ["CHROMADB_DISABLE_MULTITENANT"] = "true"
 # Configuration de la page
 st.set_page_config(page_title="Chatbot Historique ⚔️", page_icon="⚔️", layout="centered")
 
-# Styles CSS personnalisés
+# Styles CSS personnalisés (notez l'ajout de "text-align: center;" dans .container)
 st.markdown(
     """
     <style>
@@ -50,6 +50,7 @@ st.markdown(
             background: white;
             border-radius: 10px;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
         .header {
             text-align: center;
@@ -122,15 +123,13 @@ qa_chain = RetrievalQA.from_chain_type(
     retriever=retriever,
 )
 
-# --- DÉFINITION D'UNE FONCTION DE RERUN ---
+# --- BOUTON D'ACTUALISATION DANS L'OVERLAY GAUCHE ---
 def my_rerun():
     if hasattr(st, "experimental_rerun"):
         st.experimental_rerun()
     else:
         st.warning("La fonction de rafraîchissement n'est pas supportée dans votre version de Streamlit. Veuillez mettre à jour Streamlit (pip install --upgrade streamlit).")
 
-# --- BOUTON D'ACTUALISATION DANS L'OVERLAY GAUCHE ---
-# Ce bouton se trouve dans la sidebar. Lorsqu'il est cliqué, il appelle notre fonction my_rerun.
 st.sidebar.button("Actualiser l'historique", on_click=my_rerun)
 
 # --- MENU LATÉRAL ---
@@ -189,6 +188,9 @@ if submit_button:
         st.write(response)
     else:
         st.warning("Veuillez entrer une question.")
+
+# Ajout d'une case à cocher "J'accepte les cookies et conditions d'utilisation"
+st.checkbox("J'accepte les cookies et conditions d'utilisation")
 
 # Option de téléchargement de l'historique complet dans la sidebar
 with st.sidebar.expander("Télécharger l'historique complet"):
