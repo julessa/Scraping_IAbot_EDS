@@ -1,6 +1,6 @@
 import os
 import json
-import time  # Import nécessaire pour time.sleep
+import time  # Pour time.sleep
 import requests
 import streamlit as st
 from streamlit_lottie import st_lottie
@@ -121,6 +121,17 @@ qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
     retriever=retriever,
 )
+
+# --- DÉFINITION D'UNE FONCTION DE RERUN ---
+def my_rerun():
+    if hasattr(st, "experimental_rerun"):
+        st.experimental_rerun()
+    else:
+        st.warning("La fonction de rafraîchissement n'est pas supportée dans votre version de Streamlit. Veuillez mettre à jour Streamlit (pip install --upgrade streamlit).")
+
+# --- BOUTON D'ACTUALISATION DANS L'OVERLAY GAUCHE ---
+# Ce bouton se trouve dans la sidebar. Lorsqu'il est cliqué, il appelle notre fonction my_rerun.
+st.sidebar.button("Actualiser l'historique", on_click=my_rerun)
 
 # --- MENU LATÉRAL ---
 st.sidebar.header("Instructions")
