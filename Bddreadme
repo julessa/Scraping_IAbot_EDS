@@ -1,0 +1,101 @@
+Voici un exemple de **README** (au format Markdown) résumant ce qu’on peut trouver dans le fichier `chroma.sqlite3`, les tables internes, et comment vérifier que tout fonctionne correctement.
+
+---
+
+# README – Structure du fichier `chroma.sqlite3` (ChromaDB)
+
+Ce document décrit brièvement :
+
+1. **Où se trouve** le fichier `chroma.sqlite3`.  
+2. **Ce qu’il contient** et pourquoi certaines données semblent illisibles.  
+3. **Comment vérifier** que tout fonctionne correctement.
+
+---
+
+## 1. Emplacement du fichier `chroma.sqlite3`
+
+Lorsque vous utilisez [ChromaDB](https://docs.trychroma.com/) dans votre projet, et que vous précisez un répertoire de persistance (par exemple `persist_directory="chroma_db"`), Chroma :
+
+- Crée un **dossier** `chroma_db/`.
+- A l’intérieur, un **fichier** `chroma.sqlite3` qui est la base de données SQLite contenant les informations de collection, de documents, de métadonnées, etc.
+- Et potentiellement un sous-dossier ou des fichiers supplémentaires selon la version (`index/`, etc.).
+
+---
+
+## 2. Contenu et structure typiques
+
+En ouvrant le fichier `chroma.sqlite3` avec un outil de visualisation SQLite (par ex. [DB Browser for SQLite](https://sqlitebrowser.org/)), vous verrez :
+
+1. **Une table listant les collections**, par exemple :
+   - Table `collections` ou `chroma_collections`.
+   - Colonnes probables :
+     - `id` (identifiant interne)
+     - `name` (nom de la collection, ex. "histoire_de_france")
+     - d’éventuelles infos sur la dimension des embeddings, la config de l’index, etc.
+
+2. **Une ou plusieurs tables pour les documents et/ou embeddings**, par exemple :
+   - `documents` ou `texts` (pour le contenu textuel)
+   - `embeddings` (pour les vecteurs)
+   - Colonnes typiques :
+     - `id` (identifiant unique de chaque document ou embedding)
+     - `text` ou `content` (le texte du document)
+     - `embedding` (données binaires ou encodées représentant les vecteurs)
+     - `metadata` (souvent encodé en JSON)
+     - `collection_id` (référence vers la table `collections`)
+
+3. **Des tables internes**, comme :
+   - `chroma_settings`, `chroma_db_version`, etc.
+   - Elles gèrent la configuration interne de Chroma (migrations, versions, etc.).
+
+### Pourquoi les champs embedding paraissent illisibles ?
+
+Les **embeddings** (vecteurs) sont généralement stockés sous forme de BLOBs (données binaires), ou encodés dans un format qui n’est pas directement lisible en clair. Ceci est normal, car ces vecteurs ont besoin d’être lus par Chroma pour la recherche de similarité.
+
+---
+
+## 3. Comment vérifier que tout est « OK »
+
+Pour vous assurer que votre base ChromaDB est correctement configurée et peuplée :
+
+1. **Vérifier l’existence de la collection**  
+   - Dans `collections`, vous devriez voir une ligne correspondant à la collection utilisée dans votre code (ex. `"histoire_de_france"`).
+
+2. **Vérifier la présence des documents/embeddings**  
+   - Dans la table `documents` (ou équivalent), vous verrez autant de lignes que de documents (ou plus si les textes ont été découpés en plusieurs chunks).  
+   - Dans la table `embeddings`, vous retrouverez les vecteurs (en BLOB ou format binaire).
+
+3. **Aucun message d’erreur** dans DB Browser  
+   - DB Browser ne doit pas signaler de corruption ou d’erreur d’intégrité quand vous ouvrez `chroma.sqlite3`.
+
+4. **Test de la recherche**  
+   - Depuis votre code Python, exécutez une requête de similarité (par exemple `.similarity_search("Qui était Napoléon ?")`).  
+   - Si Chroma renvoie bien des passages/documents pertinents, la base est fonctionnelle.
+
+---
+
+## 4. Manipuler la base en toute sécurité
+
+Bien que vous puissiez **consulter** la base SQLite, il est déconseillé de la **modifier directement** à la main si vous n’êtes pas certain·e de ce que vous faites. Les index et vecteurs sont souvent liés à des structures internes que Chroma gère automatiquement.
+
+Pour ajouter, supprimer ou modifier des documents :
+
+- Utilisez plutôt l’API Chroma (ou celle de LangChain) :  
+  ```python
+  vectorstore.add_documents([...]) 
+  vectorstore.delete(id="...") 
+  ...
+  ```
+  
+- Re-lancez ensuite un `vectorstore.persist()` pour répercuter vos changements dans le fichier `chroma.sqlite3`.
+
+---
+
+## 5. Ressources
+
+- [Documentation ChromaDB](https://docs.trychroma.com/)  
+- [DB Browser for SQLite](https://sqlitebrowser.org/) pour visualiser le contenu SQLite  
+- [LangChain & Chroma integration](https://python.langchain.com/docs/integrations/vectorstores/chroma) pour en savoir plus sur l’utilisation combinée  
+
+---
+
+**Résumé** : Votre fichier `chroma.sqlite3` contient la structure de base d’une collection Chroma (tables, embeddings, métadonnées, etc.). Si vous voyez bien vos collections et documents, et que votre code effectue sans erreur des recherches de similarité, c’est le signe que tout est correctement configuré.
