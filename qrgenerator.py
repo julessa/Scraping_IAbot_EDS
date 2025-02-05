@@ -17,13 +17,17 @@ def load_and_clean_data(file_path):
 # 2. Créer un jeu de données question-réponse
 def generate_qa_pairs(cleaned_data):
     qa_pairs = []
-    
     for entry in cleaned_data:
+        # Créer des questions à partir des événements
         question = f"Que s'est-il passé le {entry['date']} ?"
         answer = entry['event']
         qa_pairs.append({"question": question, "answer": answer})
-    
+        # Afficher chaque paire dans le terminal
+        print(f"Question: {question}")
+        print(f"Réponse: {answer}")
+        print("-" * 50)
     return qa_pairs
+
 
 # 3. Convertir les événements en documents LangChain et les indexer dans Chroma
 def prepare_chroma_index(qa_pairs, persist_directory, embedding, chunk_size=500, chunk_overlap=50):
