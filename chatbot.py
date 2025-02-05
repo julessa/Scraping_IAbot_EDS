@@ -163,7 +163,7 @@ st.sidebar.button("Actualiser l'historique", on_click=my_rerun)
 # --- MENU LATÉRAL ---
 st.sidebar.header("Instructions")
 st.sidebar.info(
-    "Posez vos questions sur l'histoire de France via le formulaire principal. "
+    "Posez vos questions sur les deux guerres mondiales via le formulaire principal. "
     "L'historique des interactions est affiché ci-dessous."
 )
 
@@ -179,7 +179,7 @@ with st.sidebar.expander("Historique des interactions récents"):
 
 st.sidebar.markdown("### À propos")
 st.sidebar.info(
-    "Ce chatbot utilise LangChain et l'API OpenAI pour répondre à vos questions sur l'histoire de France. "
+    "Ce chatbot utilise LangChain et l'API OpenAI pour répondre à vos questions sur les deux guerres mondiales . "
     "Les interactions sont sauvegardées et affichées dans l'historique."
 )
 
@@ -189,22 +189,33 @@ with st.container():
     st_lottie(lottie_soldiers, speed=1, width=400, height=300, key="soldiers")
 
 # Fonction pour interroger le chatbot et enregistrer l'historique
+# Fonction pour interroger le chatbot et enregistrer l'historique
 def chat_with_bot(query):
+    # Vérification de la question pour le thème des guerres mondiales
+    theme_keywords = ['guerre', 'bataille', 'armistice', 'général', 'alliance', 'tranchées', 'soldats', 'guerre mondiale', '1914', '1939', '1945']
+    if not any(keyword in query.lower() for keyword in theme_keywords):
+        return "Désolé, je ne peux répondre qu'aux questions relatives aux guerres mondiales (1914-1945)."
+
+    # Si la question est liée au thème, récupérer la réponse de la chaîne de questions-réponses
     response = qa_chain.run(query)
+    
     # Pause d'1 seconde pour limiter le risque de blocage par l'API OpenAI
     time.sleep(1)
+    
     # Ajout d'un timestamp pour chaque interaction
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     history_entry = f"**[{timestamp}] Question:** {query}\n\n**Réponse:** {response}"
     history_doc = Document(page_content=history_entry)
+    
     # Ajout de l'entrée d'historique à Chroma et sauvegarde
     vector_store.add_documents([history_doc])
     vector_store.persist()
+
     return response
 
 # Formulaire pour saisir la question avec bouton centré
 with st.form(key="chat_form", clear_on_submit=True):
-    query = st.text_input("Posez votre question sur l'histoire de France :", "")
+    query = st.text_input("Posez votre question sur les deux guerres mondiales :", "")
     col1, col2, col3 = st.columns([1, 1, 1])
     submit_button = col2.form_submit_button("Envoyer")
 
@@ -226,3 +237,4 @@ with st.sidebar.expander("Télécharger l'historique complet"):
         results_all = vector_store.similarity_search("Réponse", k=100)
         history_text = "\n\n".join([doc.page_content for doc in results_all])
     st.download_button("Télécharger l'historique", history_text, "historique.txt", "text/plain")
+

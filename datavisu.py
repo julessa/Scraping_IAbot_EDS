@@ -120,7 +120,7 @@ def chat_with_bot(query):
     return qa_chain.invoke({"query": query})
 
 # --- Interface du chatbot ---
-query = st.text_input("Posez votre question sur l'histoire de France :")
+query = st.text_input("Posez votre question sur les deux guerres mondiales :")
 if st.button("Envoyer"):
     if query:
         with st.spinner("Recherche en cours..."):
