@@ -197,14 +197,14 @@ def chat_with_bot(query):
     if date_match:
         # Extraire l'année de la question
         year = int(date_match.group(3))
-        if year < 1918 or year > 1945:
-            return "Désolé, je ne peux répondre qu'aux événements entre 1918 et 1945."
+        if year < 1914 or year > 1945:
+            return "Désolé, je ne peux répondre qu'aux événements entre 1914 et 1945."
     else:
         # Rejeter les questions qui parlent d'événements hors période sans mentionner de date explicite
         # (ex. Révolution française, prise de la Bastille, rois de France, etc.)
         keywords_outside_period = ["révolution française", "dernier roi de france", "1789", "rois de france", "napoléon", "louis xiv"]
         if any(keyword in query.lower() for keyword in keywords_outside_period):
-            return "Désolé, je ne peux répondre qu'aux questions concernant les guerres mondiales (1918-1945)."
+            return "Désolé, je ne peux répondre qu'aux questions concernant les guerres mondiales (1914-1945)."
 
     # Si la question est dans la période valide, interroger le modèle LangChain
     response = qa_chain.run(query)
