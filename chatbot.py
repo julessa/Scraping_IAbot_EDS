@@ -14,6 +14,7 @@ import plotly.express as px
 from sklearn.decomposition import PCA
 import numpy as np
 import pandas as pd
+import re
 
 # Désactivez le mode multi‑tenant dès le début
 os.environ["CHROMADB_DISABLE_MULTITENANT"] = "true"
@@ -84,15 +85,27 @@ with open("combined_data.json", "r", encoding="utf-8") as f:
 def filter_documents_by_date(documents, start_year=1914, end_year=1945):
     """
     Filtrer les documents pour inclure uniquement ceux entre 1914 et 1945.
+    Ajoute une gestion d'erreurs pour les dates mal formatées et les dates sous format texte.
     """
     filtered_docs = []
+    
     for doc in documents:
-        year = int(doc['date'][:4])  # Extraire l'année à partir de la date
-        if start_year <= year <= end_year:
-            filtered_docs.append(doc)
+        date_str = doc['date']  # Exemple : "18 décembre 1917"
+        
+        # Expression régulière pour extraire l'année à partir de la chaîne de texte
+        match = re.search(r'\b(\d{4})\b', date_str)  # Recherche un nombre à 4 chiffres (année)
+        
+        if match:
+            year = int(match.group(1))  # Extraire l'année du match trouvé
+            if start_year <= year <= end_year:
+                filtered_docs.append(doc)
+        else:
+            # Si aucune année n'est trouvée, on peut l'ignorer ou gérer l'erreur
+            print(f"Date mal formatée ou sans année : {date_str}")
+    
     return filtered_docs
 
-# Filtrer les documents par période
+# Filtrer les documents par période (1914-1945)
 filtered_data = filter_documents_by_date(data)
 
 # Filtrer les doublons et transformer les entrées en documents LangChain
