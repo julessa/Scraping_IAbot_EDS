@@ -21,7 +21,7 @@ os.environ["CHROMADB_DISABLE_MULTITENANT"] = "true"
 # Configuration de la page
 st.set_page_config(page_title="Chatbot Historique ⚔️", page_icon="⚔️", layout="centered")
 
-# Styles CSS personnalisés (notez l'ajout de "text-align: center;" dans .container)
+# Styles CSS personnalisés
 st.markdown(
     """
     <style>
@@ -80,9 +80,24 @@ if not openai_api_key:
 with open("combined_data.json", "r", encoding="utf-8") as f:
     data = json.load(f)
 
+# Filtrer les documents entre 1914 et 1945
+def filter_documents_by_date(documents, start_year=1914, end_year=1945):
+    """
+    Filtrer les documents pour inclure uniquement ceux entre 1914 et 1945.
+    """
+    filtered_docs = []
+    for doc in documents:
+        year = int(doc['date'][:4])  # Extraire l'année à partir de la date
+        if start_year <= year <= end_year:
+            filtered_docs.append(doc)
+    return filtered_docs
+
+# Filtrer les documents par période
+filtered_data = filter_documents_by_date(data)
+
 # Filtrer les doublons et transformer les entrées en documents LangChain
 docs = []
-for entry in data:
+for entry in filtered_data:
     if "duplicate" in entry and not entry["duplicate"]:
         text = f"{entry['date']} : {entry['event']}"
         docs.append(Document(page_content=text))

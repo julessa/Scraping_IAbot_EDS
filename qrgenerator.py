@@ -89,12 +89,6 @@ if __name__ == "__main__":
     # Créer un index séparé pour l'historique des conversations
     chat_history_vector_store = Chroma(persist_directory=chat_history_directory, embedding_function=embedding)
 
-    # Exemple d'ajout d'une question-réponse à l'historique (après une interaction avec le chatbot)
-    query = "Quel événement a eu lieu le 14 juillet 1789 ?"
-    response = "La prise de la Bastille a eu lieu le 14 juillet 1789."
-    add_to_chat_history(query, response, chat_history_vector_store, embedding)
-    print("Added to chat history.")
-
     # Optionnel : Visualisation des documents indexés
     print("\n--- Documents d'entraînement (Question-Réponse) ---")
     display_chroma_documents(training_vector_store, num_docs=5)
