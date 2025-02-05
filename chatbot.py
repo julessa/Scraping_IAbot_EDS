@@ -189,14 +189,23 @@ with st.container():
     st_lottie(lottie_soldiers, speed=1, width=400, height=300, key="soldiers")
 
 # Fonction pour interroger le chatbot et enregistrer l'historique
+# Fonction pour interroger le chatbot et enregistrer l'historique
 def chat_with_bot(query):
     # Filtrer la question par date (permet d'éviter les questions hors période)
     date_match = re.search(r'\b(\d{1,2})\s([a-zA-Zéàû]+)\s(\d{4})\b', query)  # Détecter les dates dans le format "18 juin 1917"
+    
     if date_match:
+        # Extraire l'année de la question
         year = int(date_match.group(3))
-        if year < 1914 or year > 1945:
-            return "Désolé, je ne peux répondre qu'aux événements entre 1914 et 1945."
+        if year < 1918 or year > 1945:
+            return "Désolé, je ne peux répondre qu'aux événements entre 1918 et 1945."
+    else:
+        # Si aucune date explicite n'est trouvée, rejeter les questions hors période (par exemple sur la révolution française)
+        keywords_outside_period = ["révolution française", "dernier roi de france", "17e siècle", "rois de france", "napoléon", "louis xiv"]
+        if any(keyword in query.lower() for keyword in keywords_outside_period):
+            return "Désolé, je ne peux répondre qu'aux questions concernant les guerres mondiales (1918-1945)."
 
+    # Si la question est dans la période valide, interroger le modèle LangChain
     response = qa_chain.run(query)
     time.sleep(1)  # Pause d'1 seconde pour limiter le risque de blocage par l'API OpenAI
 
@@ -210,6 +219,7 @@ def chat_with_bot(query):
     vector_store.persist()
 
     return response
+
 
 # Formulaire pour saisir la question avec bouton centré
 with st.form(key="chat_form", clear_on_submit=True):
