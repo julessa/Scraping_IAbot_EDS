@@ -20,7 +20,7 @@ import re
 os.environ["CHROMADB_DISABLE_MULTITENANT"] = "true"
 
 # Configuration de la page
-st.set_page_config(page_title="Chatbot Historique ⚔️", page_icon="⚔️", layout="centered")
+st.set_page_config(page_title="Chatbot WarBot ⚔️", page_icon="⚔️", layout="centered")
 
 # Styles CSS personnalisés
 st.markdown(
@@ -179,7 +179,7 @@ with st.sidebar.expander("Historique des interactions récents"):
 
 st.sidebar.markdown("### À propos")
 st.sidebar.info(
-    "Ce chatbot utilise LangChain et l'API OpenAI pour répondre à vos questions sur l'histoire de France. "
+    "Ce chatbot utilise LangChain et l'API OpenAI pour répondre à vos questions sur l'histoire de 1914 / 1945. "
     "Les interactions sont sauvegardées et affichées dans l'historique."
 )
 
@@ -225,7 +225,7 @@ def chat_with_bot(query):
 
 # Formulaire pour saisir la question avec bouton centré
 with st.form(key="chat_form", clear_on_submit=True):
-    query = st.text_input("Posez votre question sur l'histoire de France :", "")
+    query = st.text_input("Posez votre question sur l'histoire de 1914 a 1945 :", "")
     col1, col2, col3 = st.columns([1, 1, 1])
     submit_button = col2.form_submit_button("Envoyer")
 
