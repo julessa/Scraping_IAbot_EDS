@@ -158,3 +158,4 @@ cython_debug/
 #.idea/
 Old/scrap_eds_groupe5_iabot.zip
 .DS_Store
+chroma_db/chroma.sqlite3
