@@ -179,7 +179,7 @@ retriever = vector_store.as_retriever()
 
 # Configuration du modèle OpenAI via LangChain
 llm = ChatOpenAI(
-    model="gpt-3.5-turbo",
+    model="gpt-4o",
     openai_api_key=openai_api_key,
     temperature=0.0
 )
@@ -229,7 +229,7 @@ with st.container():
 
 # Fonction pour interroger le chatbot et enregistrer l'historique
 def chat_with_bot(query):
-    # Filtrage des questions sans date explicite (exemple: "Que s'est-il passé en 1789 ?")
+    # Filtrage des questions avec date explicite (exemple: "Que s'est-il passé en 1789 ?")
     date_match = re.search(r'\b(\d{1,2})\s([a-zA-Zéàû]+)\s(\d{4})\b', query)  # Détecter les dates dans le format "18 juin 1917"
     
     if date_match:
@@ -239,9 +239,9 @@ def chat_with_bot(query):
             return "Désolé, je ne peux répondre qu'aux événements entre 1918 et 1945."
     else:
         # Rejeter les questions qui parlent d'événements hors période sans mentionner de date explicite
-        # Liste de mots-clés à exclure des sujets non pertinents
         keywords_outside_period = ["révolution française", "dernier roi de france", "1789", "rois de france", "napoléon", "louis xiv", "maître gims", "trello", "Steve jobs"]
-        if any(keyword in query.lower() for keyword in keywords_outside_period):
+        # On autorise les questions sur les guerres mondiales sans date explicite
+        if any(keyword in query.lower() for keyword in keywords_outside_period) and not ("guerre" in query.lower() or "1914" in query or "1945" in query):
             return "Désolé, je ne peux répondre qu'aux questions concernant les guerres mondiales (1914-1945)."
 
     # Si la question est dans la période valide, interroger le modèle LangChain
@@ -259,6 +259,7 @@ def chat_with_bot(query):
 
     return response
 
+ 
 # Formulaire pour saisir la question avec bouton centré
 with st.form(key="chat_form", clear_on_submit=True):
     query = st.text_input("Posez votre question sur l'histoire de France :", "")
