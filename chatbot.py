@@ -226,53 +226,26 @@ st.sidebar.info(
 with st.container():
     st.markdown('<div class="header"><h1>⚔️ Chatbot Historique ⚔️</h1></div>', unsafe_allow_html=True)
     st_lottie(lottie_soldiers, speed=1, width=400, height=300, key="soldiers")
-    
-    
-    # Liste des mots-clés à filtrer pour interdire des sujets modernes
-forbidden_keywords = ["maître gims", "trello", "Steve jobs", "napoléon", "révolution française", "1789", "rois de france"]
-
-
-def get_recent_history(vector_store, max_tokens=4096):
-    """
-    Récupère l'historique des messages et tronque le contexte pour ne pas dépasser la limite de jetons.
-    """
-    results = vector_store.similarity_search("Réponse", k=5)  # Ajustez le nombre de documents récents à récupérer
-    history = ""
-    
-    # Concaténer les résultats jusqu'à ce que la longueur du contexte dépasse la limite des jetons
-    for result in results[::-1]:  # On commence par les documents les plus anciens
-        history += result.page_content + "\n"
-        
-        # Vérification de la longueur actuelle du contexte
-        if len(history.split()) > max_tokens:
-            break
-    
-    return history
-
 
 # Fonction pour interroger le chatbot et enregistrer l'historique
 def chat_with_bot(query):
-    # Vérification des mots-clés interdits
-    if any(keyword in query.lower() for keyword in forbidden_keywords):
-        return "Désolé, je ne peux répondre qu'aux questions concernant les guerres mondiales (1914-1945)."
-    
-    # Vérification d'une date valide dans la question
+    # Filtrage des questions sans date explicite (exemple: "Que s'est-il passé en 1789 ?")
     date_match = re.search(r'\b(\d{1,2})\s([a-zA-Zéàû]+)\s(\d{4})\b', query)  # Détecter les dates dans le format "18 juin 1917"
+    
     if date_match:
+        # Extraire l'année de la question
         year = int(date_match.group(3))
         if year < 1918 or year > 1945:
             return "Désolé, je ne peux répondre qu'aux événements entre 1918 et 1945."
     else:
-        return "Désolé, je ne peux répondre qu'aux questions sur les événements entre 1918 et 1945."
-    
-    # Récupérer l'historique récent et tronquer le contexte si nécessaire
-    recent_history = get_recent_history(vector_store, max_tokens=4096)  # Utiliser 4096 jetons pour le contexte
-    
-    # Créer un prompt avec la question actuelle et l'historique réduit
-    prompt = recent_history + f"\nQuestion: {query}\nRéponse:"
-    
-    # Interroger le modèle OpenAI via LangChain
-    response = qa_chain.run(prompt)
+        # Rejeter les questions qui parlent d'événements hors période sans mentionner de date explicite
+        # Liste de mots-clés à exclure des sujets non pertinents
+        keywords_outside_period = ["révolution française", "dernier roi de france", "1789", "rois de france", "napoléon", "louis xiv", "maître gims", "trello", "Steve jobs"]
+        if any(keyword in query.lower() for keyword in keywords_outside_period):
+            return "Désolé, je ne peux répondre qu'aux questions concernant les guerres mondiales (1914-1945)."
+
+    # Si la question est dans la période valide, interroger le modèle LangChain
+    response = qa_chain.run(query)
     time.sleep(1)  # Pause d'1 seconde pour limiter le risque de blocage par l'API OpenAI
 
     # Ajout d'un timestamp pour chaque interaction
@@ -285,8 +258,6 @@ def chat_with_bot(query):
     vector_store.persist()
 
     return response
-
-
 
 # Formulaire pour saisir la question avec bouton centré
 with st.form(key="chat_form", clear_on_submit=True):
