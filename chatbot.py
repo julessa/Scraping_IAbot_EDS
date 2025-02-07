@@ -140,7 +140,7 @@ retriever = vector_store.as_retriever()
 
 # Configuration du modèle OpenAI via LangChain
 llm = ChatOpenAI(
-    model="gpt-3.5-turbo",
+    model="gpt-4o",
     openai_api_key=openai_api_key,
     temperature=0.0
 )
