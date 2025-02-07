@@ -22,18 +22,7 @@ os.environ["CHROMADB_DISABLE_MULTITENANT"] = "true"
 # Configuration de la page
 st.set_page_config(page_title="Chatbot Historique ⚔️", page_icon="⚔️", layout="centered")
 
-# Demander le consentement de l'utilisateur pour la collecte de données
-consent = st.checkbox("J'accepte que mes données soient collectées et utilisées conformément à la politique de confidentialité.")
-
-# Si l'utilisateur n'accepte pas, arrêter le processus
-if not consent:
-    st.warning("Vous devez accepter les conditions d'utilisation pour interagir avec le chatbot.")
-    st.stop()
-
-# Lien vers la politique de confidentialité
-st.markdown("[Politique de confidentialité](URL_de_votre_politique_de_confidentialité)", unsafe_allow_html=True)
-
-# Styles CSS personnalisés pour simuler un chat de type WhatsApp
+# Styles CSS personnalisés pour simuler un chat de type WhatsApp avec des couleurs plus foncées
 st.markdown(
     """
     <style>
@@ -73,10 +62,10 @@ st.markdown(
             justify-content: center;
             align-items: center;
         }
-        /* Ajout du style pour les messages */
+        /* Ajout du style pour les messages avec des couleurs plus foncées */
         .user-message {
-            background-color: #cce5ff;
-            color: #003366;
+            background-color: #0066cc;  /* Bleu plus foncé */
+            color: white;
             padding: 10px;
             margin: 5px 0;
             border-radius: 10px;
@@ -87,8 +76,8 @@ st.markdown(
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         .bot-message {
-            background-color: #d4edda;
-            color: #155724;
+            background-color: #28a745;  /* Vert plus foncé */
+            color: white;
             padding: 10px;
             margin: 5px 0;
             border-radius: 10px;
@@ -240,9 +229,10 @@ def chat_with_bot(query):
             return "Désolé, je ne peux répondre qu'aux événements entre 1918 et 1945."
     else:
         # Rejeter les questions qui parlent d'événements hors période sans mentionner de date explicite
-        keywords_outside_period = ["révolution française", "dernier roi de france", "1789", "rois de france", "napoléon", "louis xiv"]
+        # Liste de mots-clés à exclure des sujets non pertinents
+        keywords_outside_period = ["révolution française", "dernier roi de france", "1789", "rois de france", "napoléon", "louis xiv", "maître gims", "trello", "Steve jobs"]
         if any(keyword in query.lower() for keyword in keywords_outside_period):
-            return "Désolé, je ne peux répondre qu'aux questions concernant les guerres mondiales (1918-1945)."
+            return "Désolé, je ne peux répondre qu'aux questions concernant les guerres mondiales (1914-1945)."
 
     # Si la question est dans la période valide, interroger le modèle LangChain
     response = qa_chain.run(query)
@@ -274,13 +264,3 @@ if submit_button:
         st.markdown(f'<div class="bot-message">{response}</div>', unsafe_allow_html=True)
     else:
         st.warning("Veuillez entrer une question.")
-
-# Ajout d'une case à cocher "J'accepte les cookies et conditions d'utilisation"
-st.checkbox("J'accepte les cookies et conditions d'utilisation")
-
-# Option de téléchargement de l'historique complet dans la sidebar
-with st.sidebar.expander("Télécharger l'historique complet"):
-    with st.spinner("Préparation du fichier..."):
-        results_all = vector_store.similarity_search("Réponse", k=100)
-        history_text = "\n\n".join([doc.page_content for doc in results_all])
-    st.download_button("Télécharger l'historique", history_text, "historique.txt", "text/plain")
