@@ -20,9 +20,9 @@ import re
 os.environ["CHROMADB_DISABLE_MULTITENANT"] = "true"
 
 # Configuration de la page
-st.set_page_config(page_title="Chatbot WarBot ⚔️", page_icon="⚔️", layout="centered")
+st.set_page_config(page_title="Chatbot Historique ⚔️", page_icon="⚔️", layout="centered")
 
-# Styles CSS personnalisés
+# Styles CSS personnalisés pour simuler un chat de type WhatsApp
 st.markdown(
     """
     <style>
@@ -62,6 +62,29 @@ st.markdown(
             justify-content: center;
             align-items: center;
         }
+        /* Ajout du style pour les messages */
+        .user-message {
+            background-color: #cce5ff;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+            text-align: left;
+            width: fit-content;
+            max-width: 80%;
+            display: inline-block;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .bot-message {
+            background-color: #d4edda;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+            text-align: left;
+            width: fit-content;
+            max-width: 80%;
+            display: inline-block;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
     </style>
     """,
     unsafe_allow_html=True
@@ -82,9 +105,9 @@ with open("combined_data.json", "r", encoding="utf-8") as f:
     data = json.load(f)
 
 # Filtrer les documents entre 1914 et 1945
-def filter_documents_by_date(documents, start_year=1914, end_year=1945):
+def filter_documents_by_date(documents, start_year=1918, end_year=1945):
     """
-    Filtrer les documents pour inclure uniquement ceux entre 1914 et 1945.
+    Filtrer les documents pour inclure uniquement ceux entre 1918 et 1945.
     Ajoute une gestion d'erreurs pour les dates mal formatées et les dates sous format texte.
     """
     filtered_docs = []
@@ -105,7 +128,7 @@ def filter_documents_by_date(documents, start_year=1914, end_year=1945):
     
     return filtered_docs
 
-# Filtrer les documents par période (1914-1945)
+# Filtrer les documents par période (1918-1945)
 filtered_data = filter_documents_by_date(data)
 
 # Filtrer les doublons et transformer les entrées en documents LangChain
@@ -122,12 +145,16 @@ split_docs = text_splitter.split_documents(docs)
 # Initialisation (ou chargement) de la base vectorielle Chroma
 persist_directory = "chroma_db"
 embedding = OpenAIEmbeddings(openai_api_key=openai_api_key)
+
+# Vérification de l'existence de l'index et rechargement ou recréation de l'index
 if os.path.exists(persist_directory) and os.listdir(persist_directory):
+    # Si l'index existe, on le charge
     vector_store = Chroma(
         persist_directory=persist_directory,
         embedding_function=embedding
     )
 else:
+    # Si l'index n'existe pas, on le recrée
     vector_store = Chroma.from_documents(
         documents=split_docs,
         embedding=embedding,
@@ -140,7 +167,7 @@ retriever = vector_store.as_retriever()
 
 # Configuration du modèle OpenAI via LangChain
 llm = ChatOpenAI(
-    model="gpt-4o",
+    model="gpt-3.5-turbo",
     openai_api_key=openai_api_key,
     temperature=0.0
 )
@@ -179,13 +206,13 @@ with st.sidebar.expander("Historique des interactions récents"):
 
 st.sidebar.markdown("### À propos")
 st.sidebar.info(
-    "Ce chatbot utilise LangChain et l'API OpenAI pour répondre à vos questions sur l'histoire de 1914 / 1945. "
+    "Ce chatbot utilise LangChain et l'API OpenAI pour répondre à vos questions sur l'histoire de France. "
     "Les interactions sont sauvegardées et affichées dans l'historique."
 )
 
 # --- ZONE PRINCIPALE ---
 with st.container():
-    st.markdown('<div class="header"><h1>⚔️ Warbot ⚔️</h1></div>', unsafe_allow_html=True)
+    st.markdown('<div class="header"><h1>⚔️ Chatbot Historique ⚔️</h1></div>', unsafe_allow_html=True)
     st_lottie(lottie_soldiers, speed=1, width=400, height=300, key="soldiers")
 
 # Fonction pour interroger le chatbot et enregistrer l'historique
@@ -200,8 +227,7 @@ def chat_with_bot(query):
             return "Désolé, je ne peux répondre qu'aux événements entre 1918 et 1945."
     else:
         # Rejeter les questions qui parlent d'événements hors période sans mentionner de date explicite
-        # (ex. Révolution française, prise de la Bastille, rois de France, etc.)
-        keywords_outside_period = ["révolution française", "dernier roi de france", "1789", "rois de france", "napoléon", "louis xiv", "Steve Jobs", "Maître Gims", "Napoléon", "roi", "chanteur", "entrepreneur", "maître gims"]
+        keywords_outside_period = ["révolution française", "dernier roi de france", "1789", "rois de france", "napoléon", "louis xiv"]
         if any(keyword in query.lower() for keyword in keywords_outside_period):
             return "Désolé, je ne peux répondre qu'aux questions concernant les guerres mondiales (1918-1945)."
 
@@ -220,12 +246,9 @@ def chat_with_bot(query):
 
     return response
 
-
-
-
 # Formulaire pour saisir la question avec bouton centré
 with st.form(key="chat_form", clear_on_submit=True):
-    query = st.text_input("Posez votre question sur l'histoire de 1914 a 1945 :", "")
+    query = st.text_input("Posez votre question sur l'histoire de France :", "")
     col1, col2, col3 = st.columns([1, 1, 1])
     submit_button = col2.form_submit_button("Envoyer")
 
@@ -233,8 +256,9 @@ if submit_button:
     if query:
         with st.spinner("Recherche..."):
             response = chat_with_bot(query)
-        st.markdown("### Réponse :")
-        st.write(response)
+        # Affichage conversationnel
+        st.markdown(f'<div class="user-message">{query}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="bot-message">{response}</div>', unsafe_allow_html=True)
     else:
         st.warning("Veuillez entrer une question.")
 
