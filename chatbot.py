@@ -264,3 +264,15 @@ if submit_button:
         st.markdown(f'<div class="bot-message">{response}</div>', unsafe_allow_html=True)
     else:
         st.warning("Veuillez entrer une question.")
+<<<<<<< HEAD
+=======
+
+
+
+# Option de téléchargement de l'historique complet dans la sidebar
+with st.sidebar.expander("Télécharger l'historique complet"):
+    with st.spinner("Préparation du fichier..."):
+        results_all = vector_store.similarity_search("Réponse", k=100)
+        history_text = "\n\n".join([doc.page_content for doc in results_all])
+    st.download_button("Télécharger l'historique", history_text, "historique.txt", "text/plain")
+>>>>>>> 66b390e4a3b965d798b0580466583dc27d5c7464
