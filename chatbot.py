@@ -162,7 +162,7 @@ llm = ChatOpenAI(model="gpt-4", openai_api_key=openai_api_key, temperature=0.0)
 qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
 
 # Liste des mots-clés à filtrer pour interdire des sujets modernes
-forbidden_keywords = ["maître gims", "trello", "Steve jobs", "maître gims", "napoléon", "révolution française", "1789", "rois de france"]
+forbidden_keywords = ["maître gims", "trello", "Steve jobs", "napoléon", "révolution française", "1789", "rois de france"]
 
 # Fonction pour interroger le chatbot et enregistrer l'historique
 def chat_with_bot(query):
