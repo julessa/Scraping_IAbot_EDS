@@ -22,6 +22,16 @@ os.environ["CHROMADB_DISABLE_MULTITENANT"] = "true"
 # Configuration de la page
 st.set_page_config(page_title="Chatbot Historique ⚔️", page_icon="⚔️", layout="centered")
 
+# Étape 1 : Demander l'acceptation des CGV et de la politique de confidentialité
+# Ajouter la case pour accepter les conditions générales d'utilisation (CGV)
+accept_cgv = st.checkbox("J'accepte les conditions générales de vente et la politique de confidentialité.")
+if not accept_cgv:
+    st.warning("Vous devez accepter les conditions générales de vente pour interagir avec le chatbot.")
+    st.stop()
+
+# Lien vers la politique de confidentialité
+st.markdown("[Politique de confidentialité](URL_de_votre_politique_de_confidentialité)", unsafe_allow_html=True)
+
 # Styles CSS personnalisés pour simuler un chat de type WhatsApp avec des couleurs plus foncées
 st.markdown(
     """
@@ -264,10 +274,6 @@ if submit_button:
         st.markdown(f'<div class="bot-message">{response}</div>', unsafe_allow_html=True)
     else:
         st.warning("Veuillez entrer une question.")
-<<<<<<< HEAD
-=======
-
-
 
 # Option de téléchargement de l'historique complet dans la sidebar
 with st.sidebar.expander("Télécharger l'historique complet"):
@@ -275,4 +281,3 @@ with st.sidebar.expander("Télécharger l'historique complet"):
         results_all = vector_store.similarity_search("Réponse", k=100)
         history_text = "\n\n".join([doc.page_content for doc in results_all])
     st.download_button("Télécharger l'historique", history_text, "historique.txt", "text/plain")
->>>>>>> 66b390e4a3b965d798b0580466583dc27d5c7464
