@@ -22,6 +22,17 @@ os.environ["CHROMADB_DISABLE_MULTITENANT"] = "true"
 # Configuration de la page
 st.set_page_config(page_title="Chatbot Historique ⚔️", page_icon="⚔️", layout="centered")
 
+# Demander le consentement de l'utilisateur pour la collecte de données
+consent = st.checkbox("J'accepte que mes données soient collectées et utilisées conformément à la politique de confidentialité.")
+
+# Si l'utilisateur n'accepte pas, arrêter le processus
+if not consent:
+    st.warning("Vous devez accepter les conditions d'utilisation pour interagir avec le chatbot.")
+    st.stop()
+
+# Lien vers la politique de confidentialité
+st.markdown("[Politique de confidentialité](URL_de_votre_politique_de_confidentialité)", unsafe_allow_html=True)
+
 # Styles CSS personnalisés pour simuler un chat de type WhatsApp
 st.markdown(
     """
@@ -65,6 +76,7 @@ st.markdown(
         /* Ajout du style pour les messages */
         .user-message {
             background-color: #cce5ff;
+            color: #003366;
             padding: 10px;
             margin: 5px 0;
             border-radius: 10px;
@@ -76,6 +88,7 @@ st.markdown(
         }
         .bot-message {
             background-color: #d4edda;
+            color: #155724;
             padding: 10px;
             margin: 5px 0;
             border-radius: 10px;
@@ -256,7 +269,7 @@ if submit_button:
     if query:
         with st.spinner("Recherche..."):
             response = chat_with_bot(query)
-        # Affichage conversationnel
+        # Affichage conversationnel avec des bulles distinctes pour l'utilisateur et le bot
         st.markdown(f'<div class="user-message">{query}</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="bot-message">{response}</div>', unsafe_allow_html=True)
     else:
