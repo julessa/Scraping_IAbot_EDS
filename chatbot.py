@@ -275,8 +275,7 @@ if submit_button:
     else:
         st.warning("Veuillez entrer une question.")
 
-# Ajout d'une case à cocher "J'accepte les cookies et conditions d'utilisation"
-st.checkbox("J'accepte les cookies et conditions d'utilisation")
+
 
 # Option de téléchargement de l'historique complet dans la sidebar
 with st.sidebar.expander("Télécharger l'historique complet"):
