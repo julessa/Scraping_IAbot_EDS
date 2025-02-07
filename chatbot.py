@@ -1,6 +1,6 @@
 import os
 import json
-import time
+import time  # Pour time.sleep
 import requests
 import streamlit as st
 from streamlit_lottie import st_lottie
@@ -10,6 +10,10 @@ from langchain.schema import Document
 from langchain.chains import RetrievalQA
 from langchain.vectorstores import Chroma
 from datetime import datetime
+import plotly.express as px
+from sklearn.decomposition import PCA
+import numpy as np
+import pandas as pd
 import re
 
 # Désactivez le mode multi‑tenant dès le début
@@ -19,6 +23,7 @@ os.environ["CHROMADB_DISABLE_MULTITENANT"] = "true"
 st.set_page_config(page_title="Chatbot Historique ⚔️", page_icon="⚔️", layout="centered")
 
 # Étape 1 : Demander l'acceptation des CGV et de la politique de confidentialité
+# Ajouter la case pour accepter les conditions générales d'utilisation (CGV)
 accept_cgv = st.checkbox("J'accepte les conditions générales de vente et la politique de confidentialité.")
 if not accept_cgv:
     st.warning("Vous devez accepter les conditions générales de vente pour interagir avec le chatbot.")
@@ -27,7 +32,7 @@ if not accept_cgv:
 # Lien vers la politique de confidentialité
 st.markdown("[Politique de confidentialité](URL_de_votre_politique_de_confidentialité)", unsafe_allow_html=True)
 
-# Styles CSS personnalisés pour simuler un chat de type WhatsApp
+# Styles CSS personnalisés pour simuler un chat de type WhatsApp avec des couleurs plus foncées
 st.markdown(
     """
     <style>
@@ -113,17 +118,24 @@ with open("combined_data.json", "r", encoding="utf-8") as f:
 
 # Filtrer les documents entre 1914 et 1945
 def filter_documents_by_date(documents, start_year=1918, end_year=1945):
+    """
+    Filtrer les documents pour inclure uniquement ceux entre 1918 et 1945.
+    Ajoute une gestion d'erreurs pour les dates mal formatées et les dates sous format texte.
+    """
     filtered_docs = []
     
     for doc in documents:
-        date_str = doc['date']
-        match = re.search(r'\b(\d{4})\b', date_str)
+        date_str = doc['date']  # Exemple : "18 décembre 1917"
+        
+        # Expression régulière pour extraire l'année à partir de la chaîne de texte
+        match = re.search(r'\b(\d{4})\b', date_str)  # Recherche un nombre à 4 chiffres (année)
         
         if match:
-            year = int(match.group(1))
+            year = int(match.group(1))  # Extraire l'année du match trouvé
             if start_year <= year <= end_year:
                 filtered_docs.append(doc)
         else:
+            # Si aucune année n'est trouvée, on peut l'ignorer ou gérer l'erreur
             print(f"Date mal formatée ou sans année : {date_str}")
     
     return filtered_docs
@@ -146,39 +158,92 @@ split_docs = text_splitter.split_documents(docs)
 persist_directory = "chroma_db"
 embedding = OpenAIEmbeddings(openai_api_key=openai_api_key)
 
+# Vérification de l'existence de l'index et rechargement ou recréation de l'index
 if os.path.exists(persist_directory) and os.listdir(persist_directory):
-    vector_store = Chroma(persist_directory=persist_directory, embedding_function=embedding)
+    # Si l'index existe, on le charge
+    vector_store = Chroma(
+        persist_directory=persist_directory,
+        embedding_function=embedding
+    )
 else:
-    vector_store = Chroma.from_documents(documents=split_docs, embedding=embedding, persist_directory=persist_directory)
+    # Si l'index n'existe pas, on le recrée
+    vector_store = Chroma.from_documents(
+        documents=split_docs,
+        embedding=embedding,
+        persist_directory=persist_directory
+    )
     vector_store.persist()
 
 # Création du retriever pour interroger la base de données
 retriever = vector_store.as_retriever()
 
 # Configuration du modèle OpenAI via LangChain
-llm = ChatOpenAI(model="gpt-4", openai_api_key=openai_api_key, temperature=0.0)
+llm = ChatOpenAI(
+    model="gpt-3.5-turbo",
+    openai_api_key=openai_api_key,
+    temperature=0.0
+)
 
 # Construction de la chaîne de questions-réponses
-qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
+qa_chain = RetrievalQA.from_chain_type(
+    llm=llm,
+    retriever=retriever,
+)
 
-# Liste des mots-clés à filtrer pour interdire des sujets modernes
-forbidden_keywords = ["maître gims", "trello", "Steve jobs", "maître gims", "napoléon", "révolution française", "1789", "rois de france"]
+# --- BOUTON D'ACTUALISATION DANS L'OVERLAY GAUCHE ---
+def my_rerun():
+    if hasattr(st, "experimental_rerun"):
+        st.experimental_rerun()
+    else:
+        st.warning("La fonction de rafraîchissement n'est pas supportée dans votre version de Streamlit. Veuillez mettre à jour Streamlit (pip install --upgrade streamlit).")
+
+st.sidebar.button("Actualiser l'historique", on_click=my_rerun)
+
+# --- MENU LATÉRAL ---
+st.sidebar.header("Instructions")
+st.sidebar.info(
+    "Posez vos questions sur l'histoire de France via le formulaire principal. "
+    "L'historique des interactions est affiché ci-dessous."
+)
+
+with st.sidebar.expander("Historique des interactions récents"):
+    with st.spinner("Chargement de l'historique..."):
+        results = vector_store.similarity_search("Réponse", k=5)
+        if results:
+            for doc in results:
+                st.markdown(doc.page_content)
+                st.markdown("---")
+        else:
+            st.info("Aucune interaction trouvée.")
+
+st.sidebar.markdown("### À propos")
+st.sidebar.info(
+    "Ce chatbot utilise LangChain et l'API OpenAI pour répondre à vos questions sur l'histoire de France. "
+    "Les interactions sont sauvegardées et affichées dans l'historique."
+)
+
+# --- ZONE PRINCIPALE ---
+with st.container():
+    st.markdown('<div class="header"><h1>⚔️ Chatbot Historique ⚔️</h1></div>', unsafe_allow_html=True)
+    st_lottie(lottie_soldiers, speed=1, width=400, height=300, key="soldiers")
 
 # Fonction pour interroger le chatbot et enregistrer l'historique
 def chat_with_bot(query):
-    # Vérification des mots-clés interdits
-    if any(keyword in query.lower() for keyword in forbidden_keywords):
-        return "Désolé, je ne peux répondre qu'aux questions concernant les guerres mondiales (1914-1945)."
-    
-    # Vérification d'une date valide dans la question
+    # Filtrage des questions sans date explicite (exemple: "Que s'est-il passé en 1789 ?")
     date_match = re.search(r'\b(\d{1,2})\s([a-zA-Zéàû]+)\s(\d{4})\b', query)  # Détecter les dates dans le format "18 juin 1917"
+    
     if date_match:
+        # Extraire l'année de la question
         year = int(date_match.group(3))
         if year < 1918 or year > 1945:
             return "Désolé, je ne peux répondre qu'aux événements entre 1918 et 1945."
     else:
-        return "Désolé, je ne peux répondre qu'aux questions sur les événements entre 1918 et 1945."
-    
+        # Rejeter les questions qui parlent d'événements hors période sans mentionner de date explicite
+        # Liste de mots-clés à exclure des sujets non pertinents
+        keywords_outside_period = ["révolution française", "dernier roi de france", "1789", "rois de france", "napoléon", "louis xiv", "maître gims", "trello", "Steve jobs"]
+        if any(keyword in query.lower() for keyword in keywords_outside_period):
+            return "Désolé, je ne peux répondre qu'aux questions concernant les guerres mondiales (1914-1945)."
+
     # Si la question est dans la période valide, interroger le modèle LangChain
     response = qa_chain.run(query)
     time.sleep(1)  # Pause d'1 seconde pour limiter le risque de blocage par l'API OpenAI
