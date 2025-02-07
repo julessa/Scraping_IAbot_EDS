@@ -21,7 +21,7 @@ import pandas as pd
 import shutil  # Pour supprimer le dossier d'index si nécessaire
 
 # --- Configuration de Streamlit ---
-st.set_page_config(page_title="Chatbot Historique ⚔️", page_icon="⚔️", layout="centered")
+st.set_page_config(page_title="Warbot", page_icon="⚔️", layout="centered")
 st.markdown(
     """
     <style>
@@ -37,7 +37,7 @@ st.markdown(
 # --- Chargement de l'animation Lottie ---
 with open("soldiers_animation.json", "r") as f:
     lottie_soldiers = json.load(f)
-st.markdown("""<div style="text-align: center;"><h1>⚔️ Chatbot Historique ⚔️</h1></div>""", unsafe_allow_html=True)
+st.markdown("""<div style="text-align: center;"><h1>⚔️ Warbot ⚔️</h1></div>""", unsafe_allow_html=True)
 st_lottie(lottie_soldiers, speed=1, width=400, height=300, key="soldiers")
 
 # --- Vérification de la clé API OpenAI ---
